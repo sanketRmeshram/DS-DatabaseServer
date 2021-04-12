@@ -34,7 +34,7 @@ def init():
     local_ip = socket.gethostbyname(socket.gethostname())
     server_socket = None
     local_port = 65532
-    list_of_ip_port = [(local_ip, 1234), (local_ip, 2345)]
+    list_of_ip_port = [("3.139.239.14", 1104), ("3.143.236.214", 1104)]
     total_node = len(list_of_ip_port)
     accepted_connection = []
     joined_connection = []
@@ -78,7 +78,7 @@ def write_thread(conn,index,ip) :
         msg = send_queue[index].get()
         send_queue_lock[index].release()
         msg = msg.encode('utf-8')
-        msg_sz = struct.pack(">H", len(msg))
+        msg_sz = struct.pack(">H", len(msg)) # Short unsigned integer type. Contains at least the [0, 65,535] range.
         conn.sendall(msg_sz+msg)
     pass
 
@@ -109,9 +109,9 @@ def main():
     global local_port
 
     #################################Temp##########################################
-    print("enter the port :") # no need if we are running on different machine
-    local_port = int(input())
-    # No need to take this as input just keep it same for all .
+    # print("enter the port :") # no need if we are running on different machine
+    # local_port = int(input())
+    # # No need to take this as input just keep it same for all .
     #################################Temp##########################################
 
 
@@ -142,20 +142,20 @@ def main():
 
     logging.info("all connections established")
 
-    # for i in accepted_connection :
-    #     threading.Thread(target=read_thread, args=(i[0], ip_mapping_to_index[i[1]], i[1],)).start()
-    # for i in joined_connection:
-    #     threading.Thread(target=write_thread, args=(i[0], ip_mapping_to_index[i[1]], i[1],)).start()
+    for i in accepted_connection :
+        threading.Thread(target=read_thread, args=(i[0], ip_mapping_to_index[i[1]], i[1],)).start()
+    for i in joined_connection:
+        threading.Thread(target=write_thread, args=(i[0], ip_mapping_to_index[i[1]], i[1],)).start()
 
 
     ########################Temp##################################
-    ind = total_node
-    for i in accepted_connection:
-        threading.Thread(target=read_thread, args=(i[0], ind, i[1],)).start()
-        ind = (ind+1)%2
-    for i in joined_connection:
-        threading.Thread(target=write_thread, args=(i[0], ind, i[1],)).start()
-        ind = (ind+1)%2
+    # ind = total_node
+    # for i in accepted_connection:
+    #     threading.Thread(target=read_thread, args=(i[0], ind, i[1],)).start()
+    #     ind = (ind+1)%2
+    # for i in joined_connection:
+    #     threading.Thread(target=write_thread, args=(i[0], ind, i[1],)).start()
+    #     ind = (ind+1)%2
     ########################Temp##################################
 
     print("press enter to start acceptin  request from web server")
