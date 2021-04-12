@@ -31,15 +31,24 @@ def init():
     global send_queue_lock
     global request_id
     
-    local_ip = socket.gethostbyname(socket.gethostname())
+
+    local_ip = open("my_ip.txt",'r').readline().replace(" ","")
+
+    # local_ip = socket.gethostbyname(socket.gethostname())
+
     server_socket = None
     local_port = 1104
-    list_of_ip_port = [("18.189.170.66",
-                        local_port), ("3.139.239.14", local_port)]
+
+    list_of_ip_port = [(_.replace(" ", ""), local_port) for _ in open("all_ip.txt", 'r')]
+
     total_node = len(list_of_ip_port)
-    accepted_connection = []
-    joined_connection = []
+    accepted_connection = [None for _ in range(total_node)]
+    joined_connection = [None for _ in range(total_node)]
     ip_mapping_to_index = {}
+
+    for i in range(total_node):
+        ip_mapping_to_index[list_of_ip_port[i][0]] = i
+
     send_queue = [Queue() for _ in range(total_node)]
     send_queue_lock = [threading.Lock() for _ in range(total_node)]
     request_id = 0
@@ -50,14 +59,15 @@ def accept_request_thread(list_of_ip_port) :
     logging.info("in accept_request_thread")
     for _ in range(len(list_of_ip_port)):
         conn, addr = server_socket.accept()
-        accepted_connection.append((conn,addr[0]))
+        accepted_connection[ip_mapping_to_index[addr[0]]] =(conn, addr[0])
+        
 
 def send_request_thread(list_of_ip_port) :
     logging.info("in send_request_thread")
     for ip,port in list_of_ip_port :
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.connect((ip,port))
-        joined_connection.append((sock,ip))
+        joined_connection[ip_mapping_to_index[ip]] = (sock, ip)
 
 
 def read_thread(conn,index,ip):
@@ -130,8 +140,7 @@ def main():
     
     global ip_mapping_to_index
     global total_node
-    for i in range(total_node):
-        ip_mapping_to_index[list_of_ip_port[i][0]] = i 
+
     print(ip_mapping_to_index)
     AR = threading.Thread(target=accept_request_thread, args=(list_of_ip_port,))
     SR = threading.Thread(target=send_request_thread, args=(list_of_ip_port,))

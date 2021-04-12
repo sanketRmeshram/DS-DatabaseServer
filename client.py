@@ -1,8 +1,8 @@
 import socket
 import struct
 
-HOST = local_ip = socket.gethostbyname(socket.gethostname())
-PORT = 1234
+HOST = "18.189.170.66"
+PORT = 1104
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 s.connect((HOST, PORT))
