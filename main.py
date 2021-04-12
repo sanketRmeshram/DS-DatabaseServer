@@ -34,7 +34,7 @@ def init():
     local_ip = socket.gethostbyname(socket.gethostname())
     server_socket = None
     local_port = 1104
-    list_of_ip_port = [("3.139.239.14", local_port), ("3.143.236.214", local_port)]
+    list_of_ip_port = [("172.31.25.210 ", local_port),("172.31.13.113 ", local_port)]
     total_node = len(list_of_ip_port)
     accepted_connection = []
     joined_connection = []
