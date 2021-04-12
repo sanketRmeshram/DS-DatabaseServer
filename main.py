@@ -33,8 +33,8 @@ def init():
     
     local_ip = socket.gethostbyname(socket.gethostname())
     server_socket = None
-    local_port = 65532
-    list_of_ip_port = [("3.139.239.14", 1104), ("3.143.236.214", 1104)]
+    local_port = 1104
+    list_of_ip_port = [("3.139.239.14", local_port), ("3.143.236.214", local_port)]
     total_node = len(list_of_ip_port)
     accepted_connection = []
     joined_connection = []
@@ -105,7 +105,7 @@ def main():
     logging.basicConfig(format=format, level=logging.INFO,datefmt="%H:%M:%S")
     init()
     global local_ip
-    local_ip = socket.gethostbyname(socket.gethostname())
+    print("local ip : ", local_ip)
     global local_port
 
     #################################Temp##########################################
