@@ -5,10 +5,13 @@ import threading
 import time
 from queue import Queue
 import struct
+import json 
+import heapq
 
 local_ip = None
 server_socket = None
 local_port = None
+local_index = None
 list_of_ip_port = None 
 total_node = None
 accepted_connection = None
@@ -17,11 +20,24 @@ ip_mapping_to_index = None
 send_queue = None #everything will be string inside queue
 send_queue_lock = None
 request_id = None 
+timestamp = None
+timestamp_lock = None
+message_id =None
+message_id_lock = None
+task_queue = None
+task_queue_lock = None
+completed_atomic_multicast = None 
+completed_atomic_multicast_lock = None
+message_id_to_message = None
+message_id_to_message_lock = None
+atomic_multicast_ACKD_timestamps = None
+atomic_multicast_ACKD_timestamps_lock = None
 
 def init():
     global local_ip
     global server_socket 
     global local_port 
+    global local_index
     global list_of_ip_port 
     global total_node
     global accepted_connection 
@@ -30,7 +46,19 @@ def init():
     global send_queue
     global send_queue_lock
     global request_id
-    
+    global message_id
+    global message_id_lock
+    global timestamp
+    global timestamp_lock
+    global task_queue    #(timestamp,is_confirmed,msg_id)
+    global task_queue_lock
+    global completed_atomic_multicast 
+    global completed_atomic_multicast_lock 
+    global message_id_to_message
+    global message_id_to_message_lock
+    global atomic_multicast_ACKD_timestamps
+    global atomic_multicast_ACKD_timestamps_lock 
+
 
     local_ip = open("my_ip.txt",'r').readline().replace(" ","")
 
@@ -48,14 +76,28 @@ def init():
 
     for i in range(total_node):
         ip_mapping_to_index[list_of_ip_port[i][0]] = i
-
+    local_index = ip_mapping_to_index[local_ip]
     send_queue = [Queue() for _ in range(total_node)]
     send_queue_lock = [threading.Lock() for _ in range(total_node)]
     request_id = 0
-
+    message_id = 0
+    timestamp = 0
+    timestamp_lock = threading.Lock()
+    message_id_lock = threading.Lock()
+    task_queue = []
+    task_queue_lock = threading.Lock()
+    completed_atomic_multicast = set()
+    completed_atomic_multicast_lock = threading.Lock()
+    message_id_to_message = {}
+    message_id_to_message_lock = threading.Lock()
+    atomic_multicast_ACKD_timestamps = {}
+    atomic_multicast_ACKD_timestamps = threading.Lock()
 
 
 def accept_request_thread(list_of_ip_port) :
+    global server_socket
+    global accepted_connection
+    global ip_mapping_to_index
     logging.info("in accept_request_thread")
     for _ in range(len(list_of_ip_port)):
         conn, addr = server_socket.accept()
@@ -63,11 +105,116 @@ def accept_request_thread(list_of_ip_port) :
         
 
 def send_request_thread(list_of_ip_port) :
+    global joined_connection
+    global ip_mapping_to_index
     logging.info("in send_request_thread")
     for ip,port in list_of_ip_port :
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.connect((ip,port))
         joined_connection[ip_mapping_to_index[ip]] = (sock, ip)
+
+
+def handle(msg,index) :
+    '''
+            msg = {
+            "time" : now,
+            "type" : "PrepareAtomicMulticast" ,
+            "msg_id" : str(local_index)+"_"+str(msg_id),
+            "content" : request
+
+
+        }
+    '''
+
+    if msg.type == "PrepareAtomicMulticast" :
+        global timestamp
+        global timestamp_lock
+
+        global task_queue
+        global task_queue_lock
+
+        timestamp_lock.acquire()
+
+        timestamp = max(timestamp+1,msg.time+1)
+        now = timestamp
+
+        task_queue_lock.acquire()
+        heapq.heappush(task_queue, (now,0,msg.msg_id))
+        task_queue_lock.release()
+
+        timestamp_lock.release()
+
+        global message_id_to_message
+        global message_id_to_message_lock
+
+        message_id_to_message_lock.acquire()
+        message_id_to_message[msg.msg_id] = msg.content 
+        message_id_to_message_lock.release()
+
+        reply = {
+            "time" : now,
+            "type": "ACKAtomicMulticast",
+            "msg_id": msg.msg_id,
+
+        }
+        global send_queue_lock
+        global send_queue
+
+        send_queue_lock[index].acquire()
+        send_queue[index].put(reply)
+        send_queue_lock[index].release()
+
+        return 
+    
+    if msg.type == "ACKAtomicMulticast" :
+
+        global atomic_multicast_ACKD_timestamps
+        global atomic_multicast_ACKD_timestamps_lock
+        max_time = None
+        atomic_multicast_ACKD_timestamps_lock.acquire()
+        if msg.msg_id in atomic_multicast_ACKD_timestamps :
+            atomic_multicast_ACKD_timestamps[msg.msg_id].append(msg.time)
+        else :
+            atomic_multicast_ACKD_timestamps[msg.msg_id] = [msg.time]
+        if len(atomic_multicast_ACKD_timestamps[msg.msg_id])==total_node :
+            max_time = max(atomic_multicast_ACKD_timestamps[msg.msg_id])
+        atomic_multicast_ACKD_timestamps_lock.release()
+        if max_time is None :
+            return
+        
+        reply = {
+            "time": max_time,
+            "type": "FinalAtomicMulticast",
+            "msg_id": msg.msg_id,
+
+        }
+        global send_queue_lock
+        global send_queue
+        for i in range(total_node):
+            send_queue_lock[i].acquire()
+            send_queue[i].put(reply)
+            send_queue_lock[i].release()
+        return
+    if msg.type == "FinalAtomicMulticast":
+
+        global task_queue
+        global task_queue_lock
+
+        task_queue_lock.acquire()
+        heapq.heappush(task_queue, (msg.time,1,msg.msg_id))
+        task_queue_lock.release()   
+        
+        global completed_atomic_multicast
+        global completed_atomic_multicast_lock
+
+        completed_atomic_multicast_lock.acquire()
+        completed_atomic_multicast.put(msg.msg_id)
+        completed_atomic_multicast_lock.release()
+
+        return
+
+
+
 
 
 def read_thread(conn,index,ip):
@@ -77,11 +224,15 @@ def read_thread(conn,index,ip):
         sz = struct.unpack(">H", sz)[0]
         msg = conn.recv(sz)    # There is possibility that it may not work so just create a loop and take constant size except last one #
         msg = msg.decode('utf-8')
-        logging.info("just recieved : %s from %s",msg,ip)
+        msg = json.loads(msg)
+        logging.info("just recieved : %s from %s",json.dumps(msg),ip)
+        handle(msg,index)
     pass
 
 def write_thread(conn,index,ip) :
     logging.info("inside write_thread with index : %d  , ip : %s ", index, ip)
+    global send_queue_lock
+    global send_queue
     while True :
         while send_queue[index].empty() :
             pass
@@ -99,16 +250,85 @@ def serve_request_thread(conn,request_id):
     while True :
         sz = conn.recv(2)
         sz = struct.unpack(">H", sz)[0]
-        print(sz)
-        msg = conn.recv(sz)
-        msg = msg.decode('utf-8')
-        logging.info("Recieved : %s from request id  %d", msg, request_id)
+        # print(sz)
+        request_from_web_server = conn.recv(sz)
+        request_from_web_server = request_from_web_server.decode('utf-8')
+        request_from_web_server = json.loads(request_from_web_server)
+        request = {
+            "request_id" : request_id,
+            "content" : request_from_web_server
+        }
+        logging.info("Recieved : %s from request id  %d", json.dumps(request_from_web_server), request_id)
+
+
+        global timestamp
+        global timestamp_lock
+
+        timestamp_lock.acquire()
+        timestamp+=1
+        now = timestamp
+        timestamp_lock.release()
+
+        global message_id
+        global message_id_lock
+
+        message_id_lock.acquire()
+        message_id+=1
+        msg_id = message_id
+        message_id_lock.release()
+
+        msg = {
+            "time" : now,
+            "type" : "PrepareAtomicMulticast" ,
+            "msg_id" : str(local_index)+"_"+str(msg_id),
+            "content" : request
+
+
+        }
+        msg = json.dumps(msg)
         global send_queue_lock
         global send_queue
+
+        ##############Atomic Multicast#####################################
         for i in range(total_node):
             send_queue_lock[i].acquire()
             send_queue[i].put(msg)
             send_queue_lock[i].release()
+        ##############Atomic Multicast#####################################
+
+
+def executor_thread() :
+    logging.info("inside executor thread")
+    global task_queue
+    global task_queue_lock
+    while True :
+
+        while task_queue.empty() :
+            pass
+
+        task_queue_lock.acquire()
+        op = heapq.heappop(task_queue)
+        task_queue_lock.release()
+
+        if op[1]==1 :
+
+            global message_id_to_message
+            global message_id_to_message_lock
+
+            message_id_to_message_lock.acquire()
+            task = message_id_to_message[op[2]] 
+            message_id_to_message_lock.release()
+            ### Remember task is actually a JSON
+            logging.info("executing : %s ",json.dumps(task))
+            #execute here
+            logging.info("executed : %s ", json.dumps(task))
+        else :
+            while op[2] not in completed_atomic_multicast :
+                pass
+
+
+
+    
 
 def main():
 
@@ -141,7 +361,7 @@ def main():
     global ip_mapping_to_index
     global total_node
 
-    print(ip_mapping_to_index)
+    # print(ip_mapping_to_index)
     AR = threading.Thread(target=accept_request_thread, args=(list_of_ip_port,))
     SR = threading.Thread(target=send_request_thread, args=(list_of_ip_port,))
     AR.start()
@@ -157,7 +377,9 @@ def main():
     for i in joined_connection:
         threading.Thread(target=write_thread, args=(i[0], ip_mapping_to_index[i[1]], i[1],)).start()
 
-
+    print(ip_mapping_to_index)
+    print(joined_connection)
+    print(accepted_connection)
     ########################Temp##################################
     # ind = total_node
     # for i in accepted_connection:
@@ -168,8 +390,11 @@ def main():
     #     ind = (ind+1)%2
     ########################Temp##################################
 
-    print("press enter to start acceptin  request from web server")
+    threading.Thread(target=executor_thread, args=()).start()
+
+    print("press enter to start accepting  request from web server")
     input()
+    print("Now i can accept the request from web-server")
     global request_id
     while True :
         conn, addr = server_socket.accept()
