@@ -65,7 +65,10 @@ def init():
     # local_ip = open("my_ip.txt",'r').readline().replace(" ","")
 
     local_ip = socket.gethostbyname(socket.gethostname())
-    public_ip = open("my_ip.txt", 'r').readline().replace(" ", "").replace('\n',"")
+    # public_ip = open("my_ip.txt", 'r').readline().replace(" ", "").replace('\n',"")
+
+    print("Enter your own public ip : ")
+    public_ip = input().replace(" ", "").replace('\n', "")
 
     server_socket = None
     local_port = 1104

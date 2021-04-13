@@ -2,8 +2,8 @@ import socket
 import struct
 import json
 
-
-HOST = "3.143.7.133"
+print("enter public ip of host : ")
+HOST = input().replace(" ", "").replace('\n', "")
 PORT = 1104
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
