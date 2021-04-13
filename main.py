@@ -94,7 +94,7 @@ def init():
     message_id_to_message = {}
     message_id_to_message_lock = threading.Lock()
     atomic_multicast_ACKD_timestamps = {}
-    atomic_multicast_ACKD_timestamps = threading.Lock()
+    atomic_multicast_ACKD_timestamps_lock = threading.Lock()
 
     print(list_of_ip_port)
     print(ip_mapping_to_index)
@@ -150,15 +150,15 @@ def handle(msg,index) :
     global message_id_to_message
     global message_id_to_message_lock
 
-    if msg.type == "PrepareAtomicMulticast" :
+    if msg["type"] == "PrepareAtomicMulticast" :
 
         timestamp_lock.acquire()
 
-        timestamp = max(timestamp+1,msg.time+1)
+        timestamp = max(timestamp+1,msg["time"]+1)
         now = timestamp
 
         task_queue_lock.acquire()
-        heapq.heappush(task_queue, (now,0,msg.msg_id))
+        heapq.heappush(task_queue, (now,0,msg["msg_id"]))
         task_queue_lock.release()
 
         timestamp_lock.release()
@@ -166,16 +166,17 @@ def handle(msg,index) :
 
 
         message_id_to_message_lock.acquire()
-        message_id_to_message[msg.msg_id] = msg.content 
+        message_id_to_message[msg["msg_id"]] = msg["content"] 
         message_id_to_message_lock.release()
 
         reply = {
             "time" : now,
             "type": "ACKAtomicMulticast",
-            "msg_id": msg.msg_id,
+            "msg_id": msg["msg_id"],
 
         }
 
+        reply = json.dumps(reply)
 
         send_queue_lock[index].acquire()
         send_queue[index].put(reply)
@@ -183,18 +184,18 @@ def handle(msg,index) :
 
         return 
     
-    if msg.type == "ACKAtomicMulticast" :
+    if msg["type"] == "ACKAtomicMulticast" :
 
         global atomic_multicast_ACKD_timestamps
         global atomic_multicast_ACKD_timestamps_lock
         max_time = None
         atomic_multicast_ACKD_timestamps_lock.acquire()
-        if msg.msg_id in atomic_multicast_ACKD_timestamps :
-            atomic_multicast_ACKD_timestamps[msg.msg_id].append(msg.time)
+        if msg["msg_id"] in atomic_multicast_ACKD_timestamps :
+            atomic_multicast_ACKD_timestamps[msg["msg_id"]].append(msg["time"])
         else :
-            atomic_multicast_ACKD_timestamps[msg.msg_id] = [msg.time]
-        if len(atomic_multicast_ACKD_timestamps[msg.msg_id])==total_node :
-            max_time = max(atomic_multicast_ACKD_timestamps[msg.msg_id])
+            atomic_multicast_ACKD_timestamps[msg["msg_id"]] = [msg["time"]]
+        if len(atomic_multicast_ACKD_timestamps[msg["msg_id"]])==total_node :
+            max_time = max(atomic_multicast_ACKD_timestamps[msg["msg_id"]])
         atomic_multicast_ACKD_timestamps_lock.release()
         if max_time is None :
             return
@@ -202,26 +203,27 @@ def handle(msg,index) :
         reply = {
             "time": max_time,
             "type": "FinalAtomicMulticast",
-            "msg_id": msg.msg_id,
+            "msg_id": msg["msg_id"],
         }
 
+        reply = json.dumps(reply)
 
         for i in range(total_node):
             send_queue_lock[i].acquire()
             send_queue[i].put(reply)
             send_queue_lock[i].release()
         return
-    if msg.type == "FinalAtomicMulticast":
+    if msg["type"] == "FinalAtomicMulticast":
 
 
         task_queue_lock.acquire()
-        heapq.heappush(task_queue, (msg.time,1,msg.msg_id))
+        heapq.heappush(task_queue, (msg["time"],1,msg["msg_id"]))
         task_queue_lock.release()   
         
 
 
         completed_atomic_multicast_lock.acquire()
-        completed_atomic_multicast.put(msg.msg_id)
+        completed_atomic_multicast.add(msg["msg_id"])
         completed_atomic_multicast_lock.release()
 
         return
