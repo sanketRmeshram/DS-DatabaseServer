@@ -3,7 +3,7 @@ import struct
 import json
 
 
-HOST = "18.189.170.66"
+HOST = "3.143.7.133"
 PORT = 1104
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
