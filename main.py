@@ -7,6 +7,7 @@ from queue import Queue
 import struct
 import json 
 import heapq
+import urllib.request
 
 public_ip = None
 local_ip = None
@@ -72,9 +73,9 @@ def init():
 
     server_socket = None
     local_port = 1104
-
-    list_of_ip_port = [(_.replace(" ", "").replace('\n', ""), local_port) for _ in open("all_ip.txt", 'r')]
-
+    url = "https://gist.githubusercontent.com/sanketRmeshram/2e0c71add59402cc26f1a518e425e0a8/raw/54fa3eb1720a18ca9e8b89f3d2adc65316269d40/all_ip.txt"
+    list_of_ip_port = [(_.decode("utf-8").replace(" ", "").replace('\n', ""), local_port) for _ in urllib.request.urlopen(url)]
+    print(list_of_ip_port)
     total_node = len(list_of_ip_port)
     accepted_connection = [None for _ in range(total_node)]
     joined_connection = [None for _ in range(total_node)]
