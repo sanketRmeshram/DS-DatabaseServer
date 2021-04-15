@@ -25,7 +25,9 @@ while True:
     sz = struct.unpack(">H", sz)[0]
     # print(sz)
     response = s.recv(sz)
+    s.close() # very very  important
     response = response.decode('utf-8')
     response = json.loads(response)
     print("received : ",response)
+
 
