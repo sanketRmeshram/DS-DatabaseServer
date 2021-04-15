@@ -68,12 +68,14 @@ def init():
     local_ip = socket.gethostbyname(socket.gethostname())
     # public_ip = open("my_ip.txt", 'r').readline().replace(" ", "").replace('\n',"")
 
-    print("Enter your own public ip : ")
-    public_ip = input().replace(" ", "").replace('\n', "")
+    # print("Enter your own public ip : ")
+    # public_ip = input().replace(" ", "").replace('\n', "")
+    public_ip = json.loads(urllib.request.urlopen("http://ip.jsontest.com/").read())['ip']
+    print("public ip : " , public_ip)
 
     server_socket = None
     local_port = 1104
-    url = "https://gist.githubusercontent.com/sanketRmeshram/2e0c71add59402cc26f1a518e425e0a8/raw/54fa3eb1720a18ca9e8b89f3d2adc65316269d40/all_ip.txt"
+    url = "https://gist.githubusercontent.com/sanketRmeshram/2e0c71add59402cc26f1a518e425e0a8/raw/all_ip.txt"
     list_of_ip_port = [(_.decode("utf-8").replace(" ", "").replace('\n', ""), local_port) for _ in urllib.request.urlopen(url)]
     print(list_of_ip_port)
     total_node = len(list_of_ip_port)
