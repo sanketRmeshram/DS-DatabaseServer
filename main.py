@@ -417,7 +417,7 @@ def executor_thread() :
             operation_lock.release()
 
             #execute here
-            if int(op[2].split('_')) == local_index :
+            if int(op[2].split('_')[0]) == local_index :
 
                 req_id_to_response_lock.acquire()
                 req_id_to_response[task["request_id"]] = response
