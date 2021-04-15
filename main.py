@@ -34,6 +34,11 @@ message_id_to_message = None
 message_id_to_message_lock = None
 atomic_multicast_ACKD_timestamps = None
 atomic_multicast_ACKD_timestamps_lock = None
+operation_lock = None
+completed_request = None
+completed_request_lock = None 
+req_id_to_response = None 
+req_id_to_response_lock = None 
 
 def init():
     global public_ip
@@ -61,7 +66,11 @@ def init():
     global message_id_to_message_lock
     global atomic_multicast_ACKD_timestamps
     global atomic_multicast_ACKD_timestamps_lock 
-
+    global operation_lock
+    global completed_request
+    global completed_request_lock
+    global req_id_to_response
+    global req_id_to_response_lock
 
     # local_ip = open("my_ip.txt",'r').readline().replace(" ","")
 
@@ -101,6 +110,13 @@ def init():
     message_id_to_message_lock = threading.Lock()
     atomic_multicast_ACKD_timestamps = {}
     atomic_multicast_ACKD_timestamps_lock = threading.Lock()
+
+    operation_lock = threading.Lock()
+
+    completed_request = set()
+    completed_request_lock = threading.Lock()
+    req_id_to_response = {}
+    req_id_to_response_lock = threading.Lock()
 
     print(list_of_ip_port)
     print(ip_mapping_to_index)
@@ -156,6 +172,9 @@ def handle(msg,index) :
     global message_id_to_message
     global message_id_to_message_lock
 
+    global atomic_multicast_ACKD_timestamps
+    global atomic_multicast_ACKD_timestamps_lock
+
     if msg["type"] == "PrepareAtomicMulticast" :
 
         timestamp_lock.acquire()
@@ -192,8 +211,7 @@ def handle(msg,index) :
     
     if msg["type"] == "ACKAtomicMulticast" :
 
-        global atomic_multicast_ACKD_timestamps
-        global atomic_multicast_ACKD_timestamps_lock
+
         max_time = None
         atomic_multicast_ACKD_timestamps_lock.acquire()
         if msg["msg_id"] in atomic_multicast_ACKD_timestamps :
@@ -266,59 +284,101 @@ def write_thread(conn,index,ip) :
     pass
 
 
-def serve_request_thread(conn,request_id):
-    logging.info("inside serving request : %d ",request_id)
+def serve_request_thread(conn,req_id):
+    logging.info("inside serving request : %d ",req_id)
     global timestamp
     global timestamp_lock
     global message_id
     global message_id_lock
     global send_queue_lock
     global send_queue
-    while True :
-        sz = conn.recv(2)
-        sz = struct.unpack(">H", sz)[0]
-        # print(sz)
-        request_from_web_server = conn.recv(sz)
-        request_from_web_server = request_from_web_server.decode('utf-8')
-        request_from_web_server = json.loads(request_from_web_server)
-        request = {
-            "request_id" : request_id,
-            "content" : request_from_web_server
-        }
-        logging.info("Recieved : %s from request id  %d", json.dumps(request_from_web_server), request_id)
+    global completed_request
+    global req_id_to_response
+    global req_id_to_response_lock
+    global operation_lock
+    sz = conn.recv(2)
+    sz = struct.unpack(">H", sz)[0]
+    # print(sz)
+    request_from_web_server = conn.recv(sz)
+    request_from_web_server = request_from_web_server.decode('utf-8')
+    request_from_web_server = json.loads(request_from_web_server)
+    request = {
+        "request_id" : req_id,
+        "content" : request_from_web_server
+    }
+    logging.info("Recieved : %s from request id  %d", json.dumps(request_from_web_server), req_id)
+    if request_from_web_server["isRead"] :
+        operation_lock.acquire()
+        response = dummy_execute(request_from_web_server)
+        operation_lock.release()
+        response = json.dumps(response)
+
+        response = response.encode('utf-8')
+
+        response_sz = struct.pack(">H", len(response))
+        conn.sendall(response_sz+response)
+        conn.close()
+
+        return 
+
+        
+
+        
 
 
 
-
-        timestamp_lock.acquire()
-        timestamp+=1
-        now = timestamp
-        timestamp_lock.release()
-
+    timestamp_lock.acquire()
+    timestamp+=1
+    now = timestamp
+    timestamp_lock.release()
 
 
-        message_id_lock.acquire()
-        message_id+=1
-        msg_id = message_id
-        message_id_lock.release()
 
-        msg = {
-            "time" : now,
-            "type" : "PrepareAtomicMulticast" ,
-            "msg_id" : str(local_index)+"_"+str(msg_id),
-            "content" : request
+    message_id_lock.acquire()
+    message_id+=1
+    msg_id = message_id
+    message_id_lock.release()
 
-
-        }
-        msg = json.dumps(msg)
+    msg = {
+        "time" : now,
+        "type" : "PrepareAtomicMulticast" ,
+        "msg_id" : str(local_index)+"_"+str(msg_id),
+        "content" : request
 
 
-        ##############Atomic Multicast#####################################
-        for i in range(total_node):
-            send_queue_lock[i].acquire()
-            send_queue[i].put(msg)
-            send_queue_lock[i].release()
-        ##############Atomic Multicast#####################################
+    }
+    msg = json.dumps(msg)
+
+
+    ##############Atomic Multicast#####################################
+    for i in range(total_node):
+        send_queue_lock[i].acquire()
+        send_queue[i].put(msg)
+        send_queue_lock[i].release()
+    ##############Atomic Multicast#####################################
+
+    while req_id not in completed_request :
+        pass
+    req_id_to_response_lock.acquire()
+    response = req_id_to_response[req_id]
+    req_id_to_response_lock.release()
+    
+    response = json.dumps(response)
+
+    response = response.encode('utf-8')
+
+    response_sz = struct.pack(">H", len(response))
+    conn.sendall(response_sz+response)
+    conn.close()
+    
+
+
+def dummy_execute(msg) :
+    return {
+        "type" : "respose",
+        "content" : "nothing",
+        "what you said" : msg
+    }
 
 
 def executor_thread() :
@@ -327,6 +387,12 @@ def executor_thread() :
     global task_queue_lock
     global message_id_to_message
     global message_id_to_message_lock
+    global operation_lock
+    global completed_request
+    global completed_request_lock
+    global req_id_to_response
+    global req_id_to_response_lock
+
     while True :
 
         while not task_queue :
@@ -345,7 +411,21 @@ def executor_thread() :
             message_id_to_message_lock.release()
             ### Remember task is actually a JSON
             logging.info("executing : %s ",json.dumps(task))
+
+            operation_lock.acquire()
+            response = dummy_execute(task["content"])
+            operation_lock.release()
+
             #execute here
+            if int(op[2].split('_')) == local_index :
+
+                req_id_to_response_lock.acquire()
+                req_id_to_response[task["request_id"]] = response
+                req_id_to_response_lock.release()
+
+                completed_request_lock.acquire()
+                completed_request.add(task["request_id"])
+                completed_request_lock.release()
             logging.info("executed : %s ", json.dumps(task))
         else :
             while op[2] not in completed_atomic_multicast :
