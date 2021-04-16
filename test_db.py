@@ -2,6 +2,7 @@ import logging
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy import MetaData
 from data_stuff import (
     Buyer,
     Seller,
@@ -12,8 +13,8 @@ from data_stuff import (
 )
 # logging.basicConfig()
 # logging.getLogger('sqlalchemy').setLevel(logging.ERROR)
-Base = declarative_base()
 engine = create_engine('mysql+mysqlconnector://user:password@localhost:3306/DSTRY')
+Base = declarative_base(bind=engine)
 Session = sessionmaker(bind=engine)
 session = Session()
 try:
@@ -53,6 +54,14 @@ try:
     print(cart_2.product)
     # print(cart_3.user)
     print(cart_3.product)
+    session.commit()
+    print('Done')
 finally:
     print('Deleting all')
-    Base.metadata.drop_all(engine)
+    print(engine.table_names())
+    session.close()
+    meta = MetaData()
+    meta.reflect(bind=engine)
+    for table in reversed(meta.sorted_tables):
+        print(table)
+        table.drop(engine)
