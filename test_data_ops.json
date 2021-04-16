@@ -1,0 +1,4 @@
+{
+	"test_view_all_products":{"type":"read", "method":"view_all_products"},
+	"test_view_product":{"type":"read", "method":"view_product", "product_id":"123"},
+}
