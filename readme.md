@@ -7,9 +7,11 @@ Add all ip in all_ip.txt file with giving extra line at end.
 - sudo apt install mysql-server
 - sudo mysql_secure_installation
 - sudo mysql
-- CREATE USER 'user'@'localhost' IDENTIFIED BY ******;
+- CREATE USER 'user'@'localhost' IDENTIFIED BY password;
 - GRANT ALL PRIVILEGES ON . TO 'user'@'localhost' WITH GRANT OPTION;
 - FLUSH PRIVILEGES;
 - exit
 - mysql -u user -p
-- *****
+- password
+- CREATE SCHEMA DSTRY; (To make one)
+- DROP SCHEMA DSTRY; (To delete one)
