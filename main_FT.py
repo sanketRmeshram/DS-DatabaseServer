@@ -297,7 +297,8 @@ def read_thread(conn,index,ip):
             logging.info("just recieved : %s from %s",json.dumps(msg),ip)
             handle(msg,index)
         pass
-    except :
+    except Exception as e :
+        logging.info("node %d with ip %s just died",index,ip)
         isAlive_lock[index].acquire()
         total_alive_node_lock.acquire()
         if isAlive[index] :
@@ -327,7 +328,8 @@ def write_thread(conn,index,ip) :
             msg_sz = struct.pack(">H", len(msg)) # Short unsigned integer type. Contains at least the [0, 65,535] range.
             conn.sendall(msg_sz+msg)
         pass
-    except :
+    except Exception as e :
+        logging.info("node %d with ip %s just died",index,ip)
         isAlive_lock[index].acquire()
         total_alive_node_lock.acquire()
         if isAlive[index] :
