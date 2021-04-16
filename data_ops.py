@@ -69,7 +69,7 @@ def main():
 	msg_handler(test_json['add_product1'])
 	# msg_handler(test_json['add_product1'])
 
-	# msg_handler(test_json['add_product2'])
+	msg_handler(test_json['add_product2'])
 	
 	msg_handler(test_json['view_all_products'])
 	# msg_handler(json.dumps(test_json['filter_products1']))
@@ -84,6 +84,7 @@ def main():
 
 	# # add
 	msg_handler(test_json['add_to_cart1'])
+	msg_handler(test_json['add_to_cart3'])
 	msg_handler(test_json['add_to_cart1'])
 	msg_handler(test_json['view_cart1'])
 
@@ -96,8 +97,8 @@ def main():
 	# msg_handler(json.dumps(test_json['view_cart1']))
 
 	# success checkout
-	# msg_handler(json.dumps(test_json['checkout1']))
-	# msg_handler(test_json['view_cart1'])
+	msg_handler(test_json['checkout1'])
+	msg_handler(test_json['view_cart1'])
 
 	# failure checkout
 	# msg_handler(json.dumps(test_json['add_to_cart3']))	

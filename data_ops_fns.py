@@ -122,7 +122,7 @@ def add_to_cart(msg):
 	if(product.quantity>=1):
 		already_exists = session.query(Cart).filter_by(product_id=product_id, user_id=user.id).all()
 		if(len(already_exists)>0):
-			if(product.quantity >= already_exists[0].quantity+1)
+			if(product.quantity >= already_exists[0].quantity+1):
 				stmt = update(Cart).where(Cart.product_id==product_id and Cart.user_id==user.id).values(quantity=already_exists[0].quantity+1).execution_options(synchronize_session="fetch")
 				result = session.execute(stmt)
 				session.commit()
@@ -217,7 +217,7 @@ def checkout(msg):
 	product_id = msg["product_id"]
 	username = msg["username"]
 	user_id = session.query(Buyer).filter_by(username=username).all()[0].id
-	logging.info("chechlout---------------------")
+	logging.info("checkout---------------------")
 
 	#  get cart quantity and remaining quantity form product table
 	cart_row = session.query(Cart).filter_by(product_id=product_id, user_id=user_id).all()[0]
@@ -253,7 +253,8 @@ def checkout(msg):
 	remove_product(msg)
 
 	# update product table
-	stmt = update(Product).where(id==product_id).values(quantity=quantity-cart_quantity).execution_options(synchronize_session="fetch")
+	stmt = update(Product).where(Product.id==product_id).values(quantity=quantity-cart_quantity).execution_options(synchronize_session="fetch")
+	print(stmt)
 	result = session.execute(stmt)
 	session.commit()
 	return ret
