@@ -30,7 +30,7 @@ def send_request(msg) :
     s.close() # very very  important
     response = response.decode('utf-8')
     response = json.loads(response)
-    print("received : ",response)
+    # print("received : ",response)
     index_lock.acquire()
     index = (index+1)%total_node
     index_lock.release()    
