@@ -17,6 +17,8 @@ engine = create_engine('mysql+mysqlconnector://user:password@localhost:3306/DSTR
 Session = sessionmaker(bind=engine)
 session = Session()
 
+
+####################################################  BUYER OPS ######################################################################################
 '''
 EXPECTED KEYS - name, username, emailid, password
 '''
@@ -112,14 +114,22 @@ def add_to_cart(msg):
 	product_id = msg["product_id"]
 	username = msg["username"]
 	quantity = msg["quantity"]
+	ret = {"ack":True, "error":""}
 
 	user = session.query(Buyer).filter_by(username=username).all()[0]
 	product = session.query(Product).filter_by(id=product_id).all()[0]
 
+	iscartempty = session.query(Cart).filter_by(product_id=product_id, user_id=user.id).all()
+	print(len(iscartempty))
+	if(len(iscartempty)>0):
+		stmt = update(Cart).where(Cart.product_id==product_id and Cart.user_id==user.id).values(quantity=iscartempty[0].quantity+1).execution_options(synchronize_session="fetch")
+		result = session.execute(stmt)
+		session.commit()
+		return ret
+
 	item = Cart(product=product, quantity=quantity, user_id=user.id)
 	session.add(item)
 	session.commit()
-	ret = {"ack":True, "error":""}
 	logging.info("\nadd_to__cart products ----------------------------")
 	return ret
 
@@ -240,6 +250,9 @@ def checkout(msg):
 	result = session.execute(stmt)
 	session.commit()
 	return ret
+
+
+####################################################  SELLER OPS ######################################################################################
 
 '''
 EXPECTED KEYS - name, username, emailid, password

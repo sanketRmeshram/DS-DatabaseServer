@@ -1,7 +1,6 @@
 import logging
 import json
-from data_ops_seller import *
-from data_ops_buyer import *
+from data_ops_fns import *
 
 # from sqlalchemy import create_engine
 # from sqlalchemy.orm import sessionmaker
@@ -68,23 +67,25 @@ def main():
 
 	# # add
 	msg_handler(test_json['add_product1'])
-	msg_handler(test_json['add_product2'])
+	# msg_handler(test_json['add_product1'])
+
+	# msg_handler(test_json['add_product2'])
 	
 	msg_handler(test_json['view_all_products'])
 	# msg_handler(json.dumps(test_json['filter_products1']))
 
 
 	# # signup buyer check
-	# msg_handler(json.dumps(test_json['signup_buyer1']))
-	# msg_handler(json.dumps(test_json['signup_buyer2']))
+	msg_handler(test_json['signup_buyer1'])
+	msg_handler(test_json['signup_buyer2'])
 
 	# # test login seller
-	# msg_handler(json.dumps(test_json['login_buyer1']))
-
+	msg_handler(test_json['login_buyer1'])
 
 	# # add
-	# msg_handler(json.dumps(test_json['add_to_cart1']))	
-	# msg_handler(json.dumps(test_json['view_cart1']))
+	msg_handler(test_json['add_to_cart1'])
+	msg_handler(test_json['add_to_cart1'])
+	msg_handler(test_json['view_cart1'])
 
 	# update quantity
 	# msg_handler(json.dumps(test_json['update_quantity1']))
