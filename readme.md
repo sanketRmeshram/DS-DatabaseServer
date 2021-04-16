@@ -29,14 +29,17 @@ sudo apt update
 sudo apt install mysql-server
 sudo mysql_secure_installation
 sudo mysql
-CREATE USER 'user'@'localhost' IDENTIFIED BY 'password';
-GRANT ALL PRIVILEGES ON *.* TO 'user'@'localhost' WITH GRANT OPTION;
-FLUSH PRIVILEGES;
-exit
+  CREATE USER 'user'@'localhost' IDENTIFIED BY 'password';
+  GRANT ALL PRIVILEGES ON *.* TO 'user'@'localhost' WITH GRANT OPTION;
+  FLUSH PRIVILEGES;
+  CREATE SCHEMA DSTRY; (To make one)
+  exit
+
 mysql -u user -p
 password
-CREATE SCHEMA DSTRY; (To make one)
-DROP SCHEMA DSTRY; (To delete one)
+  CREATE SCHEMA DSTRY; (To make one)
+  DROP SCHEMA DSTRY; (To delete one)
+
 sudo apt install python3-pip
 pip3 install -r requirements.txt
 ```
