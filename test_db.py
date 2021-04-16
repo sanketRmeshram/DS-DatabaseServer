@@ -27,7 +27,7 @@ try:
     session.add(bhagat)
     session.add(ankit)
     session.commit()
-    print(ankit)
+    print(ankit, ankit.emailid)
     print(bhagat)
     session.add(bottle)
     session.add(shoes)
