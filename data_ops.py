@@ -1,22 +1,23 @@
+import logging
 import json
 from data_ops_seller import *
 from data_ops_buyer import *
 
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy import MetaData
-from sqlalchemy.ext.declarative import declarative_base
+# from sqlalchemy import create_engine
+# from sqlalchemy.orm import sessionmaker
+# from sqlalchemy import MetaData
+# from sqlalchemy.ext.declarative import declarative_base
 
 ## msg - is the msg recvd by sanket
 ## expected to be a string
 
-engine = create_engine('mysql+mysqlconnector://user:password@localhost:3306/DSTRY')
-Session = sessionmaker(bind=engine)
-Base = declarative_base()
-session = Session()
+# engine = create_engine('mysql+mysqlconnector://user:password@localhost:3306/DSTRY')
+# Session = sessionmaker(bind=engine)
+# Base = declarative_base()
+# session = Session()
 
 def msg_handler(msg):
-	msg = json.loads(msg)
+	# msg = json.loads(msg)
 
 	# each method will return json dumped in form of string
 
@@ -46,11 +47,13 @@ def msg_handler(msg):
 	if(msg['method'] == "checkout"):
 		return checkout(msg)
 
-	ret = {"ack":True, "error":"ERROR - INCORRECT MSG FORMAT"}
+	ret = {"ack":True, "error":"MSG_FORMAT"}
 	return json.dumps(ret)
 
 
 def main():
+	format = "%(asctime)s: %(message)s"
+	logging.basicConfig(format=format, level=logging.INFO,datefmt="%H:%M:%S")
 	print("--------------------------------------------------------------")
 	with open("test_data_ops.json") as f:
 		test_json = json.load(f)
@@ -81,30 +84,24 @@ def main():
 
 	# # add
 	# msg_handler(json.dumps(test_json['add_to_cart1']))	
-	msg_handler(json.dumps(test_json['view_cart1']))
+	# msg_handler(json.dumps(test_json['view_cart1']))
 
 	# update quantity
-	msg_handler(json.dumps(test_json['update_quantity1']))
-	msg_handler(json.dumps(test_json['view_cart1']))
+	# msg_handler(json.dumps(test_json['update_quantity1']))
+	# msg_handler(json.dumps(test_json['view_cart1']))
 	
 	# # should produce error
 	# msg_handler(json.dumps(test_json['update_quantity2']))
 	# msg_handler(json.dumps(test_json['view_cart1']))
 
 	# success checkout
-	msg_handler(json.dumps(test_json['checkout1']))
-	msg_handler(json.dumps(test_json['view_cart1']))
+	# msg_handler(json.dumps(test_json['checkout1']))
+	msg_handler(test_json['view_cart1'])
 
 	# failure checkout
-	msg_handler(json.dumps(test_json['add_to_cart3']))	
-	msg_handler(json.dumps(test_json['checkout2']))
+	# msg_handler(json.dumps(test_json['add_to_cart3']))	
+	msg_handler(test_json['checkout2'])
 
-	session.close()
-	# meta = MetaData()
-	# meta.reflect(bind=engine)
-	# for table in reversed(meta.sorted_tables):
-	# 	print(table)
-	# 	table.drop(engine)
 
 if __name__ == '__main__':
 	main()

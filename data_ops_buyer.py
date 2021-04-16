@@ -39,8 +39,8 @@ EXPECTED KEYS - username
 def login_buyer(msg):
 	username = msg["username"]
 	results = session.query(Buyer).filter_by(name=username).all()
-	print("login_buyer -----------------")
-	print(results)
+	logging.info("login_buyer -----------------")
+	logging.info(results)
 
 	ret = {"ack":True, "error":""}
 	if(len(results)!=0):
@@ -69,9 +69,9 @@ def view_all_products(msg):
 		ret['product_name'].append(x.name)
 		ret['price'].append(x.price)
 		ret['quantity'].append(x.quantity)
-	print("View products ----------------------------")
-	print(results)
-	print(ret)
+	logging.info("View products ----------------------------")
+	logging.info(results)
+	logging.info(ret)
 	return ret
 
 
@@ -96,9 +96,9 @@ def filter_products(msg):
 		ret['price'].append(x.price)
 		ret['quantity'].append(x.quantity)
 
-	print("Filter products ----------------------------")
-	print(results)
-	print(ret)
+	logging.info("Filter products ----------------------------")
+	logging.info(results)
+	logging.info(ret)
 	return ret
 
 
@@ -117,7 +117,7 @@ def add_to_cart(msg):
 	session.add(item)
 	session.commit()
 	ret = {"ack":True, "error":""}
-	print("\nadd_to__cart products ----------------------------")
+	logging.info("\nadd_to__cart products ----------------------------")
 	return ret
 
 
@@ -139,11 +139,10 @@ def view_cart(msg):
 		ret['quantity'].append(x.quantity)
 		ret['name'].append(x.product.name)
 
-	print("\nview_cart products ----------------------------")
-	print(results)
-	print(ret)
+	logging.info("\nview_cart products ----------------------------")
+	logging.info(results)
+	logging.info(ret)
 
-	ret = {"ack":True, "error":""}
 	return ret
 
 '''
@@ -154,7 +153,7 @@ def update_quantity(msg):
 	username = msg["username"]
 	new_quantity = msg["new_quantity"]
 	ret = {"ack":True, "error":""}
-	print("update_quantity -------------------------")
+	logging.info("update_quantity -------------------------")
 
 	if(new_quantity==0):
 		remove_product(msg)
@@ -164,7 +163,7 @@ def update_quantity(msg):
 	# check if enough quantity is present
 	if(quantity<new_quantity):
 		ret['error'] = "QUANTITY_ERROR"
-		print(ret)
+		logging.info(ret)
 		return ret
 
 	user_id = session.query(Buyer).filter_by(username=username).all()[0].id
@@ -172,7 +171,7 @@ def update_quantity(msg):
 	stmt = update(Cart).where(Cart.product_id == product_id and Cart.user_id==user_id).values(quantity=new_quantity).execution_options(synchronize_session="fetch")
 	result = session.execute(stmt)
 	session.commit()
-	print(ret)
+	logging.info(ret)
 	return ret
 
 '''
@@ -187,7 +186,7 @@ def remove_product(msg):
 	result = session.execute(stmt)
 	session.commit()
 	ret = {"ack":True, "error":""}
-	print("remove_product -----------------")
+	logging.info("remove_product -----------------")
 	return ret
 
 
@@ -198,7 +197,7 @@ def checkout(msg):
 	product_id = msg["product_id"]
 	username = msg["username"]
 	user_id = session.query(Buyer).filter_by(username=username).all()[0].id
-	print("chechlout---------------------")
+	logging.info("chechlout---------------------")
 
 	#  get cart quantity and remaining quantity form product table
 	cart_row = session.query(Cart).filter_by(product_id=product_id, user_id=user_id).all()[0]
@@ -217,7 +216,7 @@ def checkout(msg):
 			)
 		session.add(item)
 		session.commit()
-		print(ret)
+		logging.info(ret)
 		return ret
 
 	# update transaction, product, cart tables
