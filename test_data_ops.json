@@ -1,0 +1,19 @@
+{
+	"signup_seller1":{"type":"read", "method":"signup_seller", "emailid":"a", "password":"9897", "name":"ankit", "username":"ankit"},
+	"signup_seller2":{"type":"read", "method":"signup_seller", "emailid":"a", "password":"9897", "name":"bhagat", "username":"bhagat"},
+	"login_seller1": {"type":"read", "method":"login_seller", "username":"ankit"},
+	"add_product1" : {"type":"read", "method":"add_product", "username":"ankit", "product_type":"fan", "product_name":"bajaj", "price":900, "quantity":50},
+	"add_product2" : {"type":"read", "method":"add_product", "username":"ankit", "product_type":"electricity", "product_name":"geyser", "price":9000, "quantity":5},
+	"view_all_products":{"type":"read", "method":"view_all_products"},
+	"filter_products1":{"type":"read", "method":"filter_products","product_type":"fan"},
+	"signup_buyer1":{"type":"read", "method":"signup_buyer", "emailid":"a", "password":"989", "name":"andy", "username":"andy"},
+	"signup_buyer2":{"type":"read", "method":"signup_buyer", "emailid":"a", "password":"9897", "name":"vasu", "username":"vasu"},
+	"add_to_cart1":{"type":"read", "method":"add_to_cart", "product_id":1, "username":"vasu", "quantity":22},
+	"view_cart1":{"type":"read", "method":"view_cart", "username":"vasu"},
+	"login_buyer1": {"type":"read", "method":"login_buyer", "username":"vasu"},
+	"update_quantity1":{"type":"write", "method":"update_quantity", "product_id":1, "new_quantity":49, "username":"vasu"},
+	"checkout1":{"type":"write", "method":"checkout", "product_id":1, "username":"vasu"},
+	"update_quantity2":{"type":"write", "method":"update_quantity", "product_id":1, "new_quantity":200, "username":"vasu"},
+	"add_to_cart3":{"type":"read", "method":"add_to_cart", "product_id":2, "username":"vasu", "quantity":22},
+	"checkout2":{"type":"write", "method":"checkout", "product_id":2, "username":"vasu"}
+}
