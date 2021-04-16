@@ -40,7 +40,7 @@ EXPECTED KEYS - username
 '''
 def login_buyer(msg):
 	username = msg["username"]
-	results = session.query(Buyer).filter_by(name=username).all()
+	results = session.query(Buyer).filter_by(username=username).all()
 	logging.info("login_buyer -----------------")
 	logging.info(results)
 
