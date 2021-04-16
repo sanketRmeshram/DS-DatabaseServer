@@ -5,10 +5,10 @@
 ```
 ssh-keygen -t ed25519 -C "your_email@example.com"
 eval "$(ssh-agent -s)"
-ssh-add ~/.ssh/id_ed25519
+ssh-add /home/ubuntu/.ssh/id_ed25519
 
 # copy key to clipboard
-cat ~/.ssh/id_ed25519.pub
+cat /home/ubuntu/.ssh/id_ed25519.pub
 ```
 paste this to https://github.com/settings/keys
 
