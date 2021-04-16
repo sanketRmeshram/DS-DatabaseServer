@@ -5,8 +5,7 @@ eval "$(ssh-agent -s)"
 ssh-add ~/.ssh/id_ed25519
 
 # copy key to clipboard
-sudo apt-get install xclip
-xclip -selection clipboard < ~/.ssh/id_ed25519.pub
+cat ~/.ssh/id_ed25519.pub
 ```
 paste this to https://github.com/settings/keys
 
