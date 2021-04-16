@@ -11,3 +11,5 @@
 - password
 - CREATE SCHEMA DSTRY; (To make one)
 - DROP SCHEMA DSTRY; (To delete one)
+- sudo apt install python3-pip
+- pip install -r requirements.txt
