@@ -4,6 +4,9 @@ import json
 import urllib.request
 import threading
 
+
+
+
 # print("enter public ip of host : ")
 # HOST = input().replace(" ", "").replace('\n', "")
 PORT = 1104
@@ -19,21 +22,16 @@ print(HOST)
 index_lock = threading.Lock()
 
 
-while True:
+def send_request(msg) :
     global index_lock
     global index
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.connect((HOST[index], PORT)) 
-    msg = input()
-    msg = {
-        "isRead" : True,
-        "sanket": msg
-    }
     msg = json.dumps(msg)
     msg = msg.encode('utf-8')
     msg_sz = struct.pack(">H", len(msg))
     s.sendall(msg_sz+msg)
-    print("sended")
+    # print("sended")
     sz = s.recv(2)
     sz = struct.unpack(">H", sz)[0]
     # print(sz)
@@ -44,6 +42,19 @@ while True:
     print("received : ",response)
     index_lock.acquire()
     index = (index+1)%total_node
-    index_lock.release()
+    index_lock.release()    
+    return response
+
+
+while True:
+
+    msg = input()
+    msg = {
+        "isRead" : True,
+        "sanket": msg
+    }
+    responce = send_request(msg)
+    print(responce)
+
 
 
