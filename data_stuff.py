@@ -31,6 +31,7 @@ class Base(object):
 
     def __repr__(self):
         value = list(self.__dict__.items())[1:]
+        # Remove the complex objects in print statement
         return str(value)
 
 
@@ -65,6 +66,10 @@ class Seller(Base):
     # profile
     # ratings
 
+    def __repr__(self):
+        value = list(self.__dict__.items())[1:-1]
+        return str(value)
+
 
 class Buyer(Base):
     __tablename__ = BUYER_TABLE_NAME
@@ -79,6 +84,10 @@ class Buyer(Base):
     its_transactions = relationship("Transaction", backref="user")
     # carts = relationship("Cart", back_populates="username")
 
+    def __repr__(self):
+        value = list(self.__dict__.items())[1:-2]
+        return str(value)
+
 
 class Product(Base):
     __tablename__ = PRODUCT_TABLE_NAME
@@ -86,13 +95,21 @@ class Product(Base):
     seller_id = Column(Integer, ForeignKey(SELLER_TABLE_NAME + '.id'))
     # seller = relationship("Seller", back_populates="products")
     name = Column(String(length=50))
-    # type
+    type = Column(String(length=50))
     # abg_rating
     price = Column(Float)
     quantity = Column(Integer)
     description = Column(String(length=300))
     reviews = relationship("Review", backref="product")
     its_cart = relationship("Cart", backref="product")
+
+    def __repr__(self):
+        value = self.__dict__
+        value.pop('reviews', None)
+        value.pop('its_cart', None)
+        value.pop('seller', None)
+        new_value = list(value.items())[1:]
+        return str(new_value)
 
 
 class Review(Base):
