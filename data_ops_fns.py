@@ -252,12 +252,12 @@ def checkout(msg):
 	remove_product(msg)
 
 	# update product table
-	if(quantity-cart_quantity==0):
-		stmt = delete(Product).where(Product.id == product_id).execution_options(synchronize_session="fetch")
-		logging.info(stmt)
-		result = session.execute(stmt)
-		session.commit()
-		return ret
+	# if(quantity-cart_quantity==0):
+	# 	stmt = delete(Product).where(Product.id == product_id).execution_options(synchronize_session="fetch")
+	# 	logging.info(stmt)
+	# 	result = session.execute(stmt)
+	# 	session.commit()
+	# 	return ret
 
 	stmt = update(Product).where(Product.id==product_id).values(quantity=quantity-cart_quantity).execution_options(synchronize_session="fetch")
 	print(stmt)
