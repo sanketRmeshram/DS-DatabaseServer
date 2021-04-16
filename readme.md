@@ -51,3 +51,9 @@ mysql -u user -p
 sudo apt install python3-pip
 pip3 install -r requirements.txt
 ```
+
+## tmux
+```
+tmx attach-session -t server
+tmux new -s server
+```
