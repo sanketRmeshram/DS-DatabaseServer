@@ -40,7 +40,7 @@ EXPECTED KEYS - username
 '''
 def login_buyer(msg):
 	username = msg["username"]
-	results = session.query(Buyer).filter_by(name=username).all()
+	results = session.query(Buyer).filter_by(username=username).all()
 	logging.info("login_buyer -----------------")
 	logging.info(results)
 
@@ -123,7 +123,7 @@ def add_to_cart(msg):
 		already_exists = session.query(Cart).filter_by(product_id=product_id, user_id=user.id).all()
 		if(len(already_exists)>0):
 			if(product.quantity >= already_exists[0].quantity+1):
-				stmt = update(Cart).where(Cart.product_id==product_id and Cart.user_id==user.id).values(quantity=already_exists[0].quantity+1).execution_options(synchronize_session="fetch")
+				stmt = update(Cart).where(Cart.product_id==product_id).where(Cart.user_id==user.id).values(quantity=already_exists[0].quantity+1).execution_options(synchronize_session="fetch")
 				result = session.execute(stmt)
 				session.commit()
 				return ret
@@ -188,7 +188,7 @@ def update_quantity(msg):
 
 	user_id = session.query(Buyer).filter_by(username=username).all()[0].id
 
-	stmt = update(Cart).where(Cart.product_id == product_id and Cart.user_id==user_id).values(quantity=new_quantity).execution_options(synchronize_session="fetch")
+	stmt = update(Cart).where(Cart.product_id == product_id).where(Cart.user_id==user_id).values(quantity=new_quantity).execution_options(synchronize_session="fetch")
 	result = session.execute(stmt)
 	session.commit()
 	logging.info(ret)
@@ -201,8 +201,7 @@ def remove_product(msg):
 	product_id = msg["product_id"]
 	username = msg["username"]
 	user_id = session.query(Buyer).filter_by(username=username).all()[0].id
-
-	stmt = delete(Cart).where(Cart.product_id == product_id and Cart.user_id==user_id).execution_options(synchronize_session="fetch")
+	stmt = delete(Cart).where(Cart.product_id == product_id).where(Cart.user_id==user_id).execution_options(synchronize_session="fetch")
 	result = session.execute(stmt)
 	session.commit()
 	ret = {"ack":True, "error":""}
@@ -253,6 +252,13 @@ def checkout(msg):
 	remove_product(msg)
 
 	# update product table
+	# if(quantity-cart_quantity==0):
+	# 	stmt = delete(Product).where(Product.id == product_id).execution_options(synchronize_session="fetch")
+	# 	logging.info(stmt)
+	# 	result = session.execute(stmt)
+	# 	session.commit()
+	# 	return ret
+
 	stmt = update(Product).where(Product.id==product_id).values(quantity=quantity-cart_quantity).execution_options(synchronize_session="fetch")
 	print(stmt)
 	result = session.execute(stmt)
