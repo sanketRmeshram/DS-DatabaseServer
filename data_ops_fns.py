@@ -201,8 +201,9 @@ def remove_product(msg):
 	product_id = msg["product_id"]
 	username = msg["username"]
 	user_id = session.query(Buyer).filter_by(username=username).all()[0].id
-
+	logging.info(user_id)
 	stmt = delete(Cart).where(Cart.product_id == product_id and Cart.user_id==user_id).execution_options(synchronize_session="fetch")
+	logging.info(stmt)
 	result = session.execute(stmt)
 	session.commit()
 	ret = {"ack":True, "error":""}
