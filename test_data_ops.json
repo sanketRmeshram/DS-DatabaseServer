@@ -14,6 +14,6 @@
 	"update_quantity1":{"type":"write", "method":"update_quantity", "product_id":1, "new_quantity":49, "username":"vasu"},
 	"checkout1":{"type":"write", "method":"checkout", "product_id":1, "username":"vasu"},
 	"update_quantity2":{"type":"write", "method":"update_quantity", "product_id":1, "new_quantity":200, "username":"vasu"},
-	"add_to_cart3":{"type":"read", "method":"add_to_cart", "product_id":2, "username":"vasu", "quantity":22},
+	"add_to_cart3":{"type":"write", "method":"add_to_cart", "product_id":2, "username":"vasu", "quantity":22},
 	"checkout2":{"type":"write", "method":"checkout", "product_id":2, "username":"vasu"}
 }

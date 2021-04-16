@@ -62,13 +62,14 @@ def view_all_products(msg):
 	ret['product_name'] = []
 	ret['price'] = []
 	ret['quantity'] = []
-	
+	ret['id'] = []
 	for x in results:
 		ret['username'].append(x.seller.username)
 		ret['product_type'].append(x.type)
 		ret['product_name'].append(x.name)
 		ret['price'].append(x.price)
 		ret['quantity'].append(x.quantity)
+		ret['id'].append(x.id)
 	logging.info("View products ----------------------------")
 	logging.info(results)
 	logging.info(ret)
@@ -88,6 +89,7 @@ def filter_products(msg):
 	ret['product_name'] = []
 	ret['price'] = []
 	ret['quantity'] = []
+	ret['id'] = []
 	
 	for x in results:
 		ret['username'].append(x.seller.username)
@@ -95,6 +97,7 @@ def filter_products(msg):
 		ret['product_name'].append(x.name)
 		ret['price'].append(x.price)
 		ret['quantity'].append(x.quantity)
+		ret['id'].append(x.id)
 
 	logging.info("Filter products ----------------------------")
 	logging.info(results)
@@ -156,7 +159,7 @@ def update_quantity(msg):
 	logging.info("update_quantity -------------------------")
 
 	if(new_quantity==0):
-		remove_product(msg)
+		return remove_product(msg)
 
 	quantity = session.query(Product).filter_by(id=product_id).all()[0].quantity
 
