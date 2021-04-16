@@ -12,9 +12,9 @@ from sqlalchemy import (
 from sqlalchemy.ext.declarative import declarative_base, declared_attr
 from sqlalchemy.orm import sessionmaker, relationship, backref
 
-BUYER_TABLE_NAME = "buyer_table"
-CART_TABLE_NAME = "cart_table"
-PRODUCT_TABLE_NAME = "product_table"
+BUYER_TABLE_NAME = "buyers"
+CART_TABLE_NAME = "carts"
+PRODUCT_TABLE_NAME = "products"
 ADMIN_TABLE_NAME = "admin_table"
 SELLER_TABLE_NAME = "seller_table"
 TRANSACTION_TABLE_NAME = "transaction_table"
