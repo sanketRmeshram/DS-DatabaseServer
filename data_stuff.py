@@ -71,12 +71,13 @@ class Buyer(Base):
     id = Column(Integer, primary_key=True)
     password = Column(String(length=50))
     name = Column(String(length=50))
-    email = Column(String(length=50))
+    emailid = Column(String(length=50))
     phone = Column(String(length=50))
     address = Column(String(length=200))
+    username = Column(String(length=50))
     # given_reviews = relationship("Review", backref="user")
     # its_transactions = relationship("Transaction", backref="user")
-    carts = relationship("Cart", back_populates="user")
+    carts = relationship("Cart", back_populates="username")
 
 
 class Product(Base):
@@ -121,7 +122,8 @@ class Cart(Base):
     # product_id = Column(Integer, ForeignKey(PRODUCT_TABLE_NAME + '.id'))
     # product = relationship("Product", back_populates="its_cart")
     user_id = Column(Integer, ForeignKey(BUYER_TABLE_NAME + '.id'))
-    user = relationship("Buyer", back_populates="carts")
+    username = relationship("Buyer", back_populates="carts")
+    quantity = Column(Integer)
 
 
 Base.metadata.create_all(engine)
