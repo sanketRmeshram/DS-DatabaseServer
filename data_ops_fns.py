@@ -118,19 +118,26 @@ def add_to_cart(msg):
 
 	user = session.query(Buyer).filter_by(username=username).all()[0]
 	product = session.query(Product).filter_by(id=product_id).all()[0]
+	
+	if(product.quantity>=1):
+		already_exists = session.query(Cart).filter_by(product_id=product_id, user_id=user.id).all()
+		if(len(already_exists)>0):
+			if(product.quantity >= already_exists[0].quantity+1)
+				stmt = update(Cart).where(Cart.product_id==product_id and Cart.user_id==user.id).values(quantity=already_exists[0].quantity+1).execution_options(synchronize_session="fetch")
+				result = session.execute(stmt)
+				session.commit()
+				return ret
+			else:
+				ret['error'] = "QUANTITY_ERROR"
+				return ret
 
-	iscartempty = session.query(Cart).filter_by(product_id=product_id, user_id=user.id).all()
-	print(len(iscartempty))
-	if(len(iscartempty)>0):
-		stmt = update(Cart).where(Cart.product_id==product_id and Cart.user_id==user.id).values(quantity=iscartempty[0].quantity+1).execution_options(synchronize_session="fetch")
-		result = session.execute(stmt)
+		item = Cart(product=product, quantity=quantity, user_id=user.id)
+		session.add(item)
 		session.commit()
+		logging.info("\nadd_to__cart products ----------------------------")
 		return ret
-
-	item = Cart(product=product, quantity=quantity, user_id=user.id)
-	session.add(item)
-	session.commit()
-	logging.info("\nadd_to__cart products ----------------------------")
+	
+	ret['error'] = "QUANTITY_ERROR"
 	return ret
 
 
