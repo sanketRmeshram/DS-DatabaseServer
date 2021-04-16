@@ -93,7 +93,7 @@ class Buyer(Base):
 class Product(Base):
     __tablename__ = PRODUCT_TABLE_NAME
     id = Column(Integer, primary_key=True)
-    seller_id = Column(Integer, ForeignKey(SELLER_TABLE_NAME + '.id'))
+    seller_id = Column(Integer, ForeignKey(SELLER_TABLE_NAME + '.username'))
     # seller = relationship("Seller", back_populates="products")
     name = Column(String(length=50))
     type = Column(String(length=50))
