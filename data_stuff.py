@@ -58,7 +58,7 @@ class Seller(Base):
     id = Column(Integer, primary_key=True)
     password = Column(String(length=50))
     name = Column(String(length=50))
-    email = Column(String(length=50))
+    emailid = Column(String(length=50))
     phone = Column(String(length=50))
     is_approved = Column(Boolean)
     products = relationship("Product", backref='seller')
@@ -75,9 +75,9 @@ class Buyer(Base):
     phone = Column(String(length=50))
     address = Column(String(length=200))
     username = Column(String(length=50))
-    # given_reviews = relationship("Review", backref="user")
-    # its_transactions = relationship("Transaction", backref="user")
-    carts = relationship("Cart", back_populates="username")
+    given_reviews = relationship("Review", backref="user")
+    its_transactions = relationship("Transaction", backref="user")
+    # carts = relationship("Cart", back_populates="username")
 
 
 class Product(Base):
@@ -92,7 +92,7 @@ class Product(Base):
     quantity = Column(Integer)
     description = Column(String(length=300))
     reviews = relationship("Review", backref="product")
-    # its_cart = relationship("Cart", backref="product")
+    its_cart = relationship("Cart", backref="product")
 
 
 class Review(Base):
@@ -101,14 +101,14 @@ class Review(Base):
     comment = Column(String(300))
     product_id = Column(Integer, ForeignKey(PRODUCT_TABLE_NAME + '.id'))
     # product = relationship("Product", back_populates="reviews")
-    # user_id = Column(Integer, ForeignKey(BUYER_TABLE_NAME + '.id'))
+    user_id = Column(Integer, ForeignKey(BUYER_TABLE_NAME + '.id'))
     # user = relationship("Buyer", back_populates="given_reviews")
 
 
 class Transaction(Base):
     __tablename__ = TRANSACTION_TABLE_NAME
     id = Column(Integer, primary_key=True)
-    # user_id = Column(Integer, ForeignKey(BUYER_TABLE_NAME + '.id'))
+    user_id = Column(Integer, ForeignKey(BUYER_TABLE_NAME + '.id'))
     # user = relationship("Buyer", back_populates="its_transactions")
     product_id = Column(Integer)
     quantity = Column(Integer)
@@ -119,10 +119,10 @@ class Transaction(Base):
 class Cart(Base):
     __tablename__ = CART_TABLE_NAME
     id = Column(Integer, primary_key=True)
-    # product_id = Column(Integer, ForeignKey(PRODUCT_TABLE_NAME + '.id'))
+    product_id = Column(Integer, ForeignKey(PRODUCT_TABLE_NAME + '.id'))
     # product = relationship("Product", back_populates="its_cart")
     user_id = Column(Integer, ForeignKey(BUYER_TABLE_NAME + '.id'))
-    username = relationship("Buyer", back_populates="carts")
+    # username = relationship("Buyer", back_populates="carts")
     quantity = Column(Integer)
 
 
