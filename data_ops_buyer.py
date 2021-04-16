@@ -55,7 +55,7 @@ EXPECTED KEYS - none
 '''
 def view_all_products(msg):
 	results = session.query(Product).all()
-
+	
 	ret = {"ack":True, "error":""}
 	ret['username'] = []
 	ret['product_type'] = []

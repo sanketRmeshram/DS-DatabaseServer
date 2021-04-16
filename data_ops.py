@@ -59,18 +59,18 @@ def main():
 		test_json = json.load(f)
 	
 	# signup seller check
-	# msg_handler(json.dumps(test_json['signup_seller1']))
+	msg_handler(test_json['signup_seller1'])
 	# msg_handler(json.dumps(test_json['signup_seller2']))
 
 	# # test login seller
-	# msg_handler(json.dumps(test_json['login_seller1']))
+	msg_handler(test_json['login_seller1'])
 
 
 	# # add
-	# msg_handler(json.dumps(test_json['add_product1']))
-	# msg_handler(json.dumps(test_json['add_product2']))
+	msg_handler(test_json['add_product1'])
+	msg_handler(test_json['add_product2'])
 	
-	# msg_handler(json.dumps(test_json['view_all_products']))
+	msg_handler(test_json['view_all_products'])
 	# msg_handler(json.dumps(test_json['filter_products1']))
 
 
@@ -96,11 +96,11 @@ def main():
 
 	# success checkout
 	# msg_handler(json.dumps(test_json['checkout1']))
-	msg_handler(test_json['view_cart1'])
+	# msg_handler(test_json['view_cart1'])
 
 	# failure checkout
 	# msg_handler(json.dumps(test_json['add_to_cart3']))	
-	msg_handler(test_json['checkout2'])
+	# msg_handler(test_json['checkout2'])
 
 
 if __name__ == '__main__':
