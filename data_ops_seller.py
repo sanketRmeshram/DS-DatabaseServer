@@ -25,9 +25,14 @@ def signup_seller(msg):
 	username = msg["username"]
 	emailid = msg["emailid"]
 	password = msg["password"]
+
+	# update seller table
 	item = Seller(name=name, username=username, emailid=emailid, password=password)
 	session.add(item)
 	session.commit()
+	print("signup seller ----------------------------")
+	
+	ret = {"ack":True, "error":""}
 	return ret
 
 
@@ -36,9 +41,14 @@ EXPECTED KEYS - username
 '''
 def login_seller(msg):
 	username = msg["username"]
-	results = session.query(Seller).filter_by(name=username).all()
-	for i in results:
-		print(type(i.__repr__()))
+	results = session.query(Seller).filter_by(username=username).all()
+	print(results)
+	ret = {"ack":True, "error":""}
+	if(len(results)!=0):
+		ret['password'] = results[0].password
+	else:
+		ret["password"] = None
+	print(ret)
 	return ret
 
 '''
@@ -50,14 +60,19 @@ def add_product(msg):
 	product_name = msg["product_name"]
 	price = msg["price"]
 	quantity = msg["quantity"]
+
+
+	results = session.query(Seller).filter_by(username=username).all()[0]
+	
 	item = Product(
-				username=username, 
-				product_type=product_type,
-				product_name=product_name,
+				seller=results, 
+				type=product_type,
+				name=product_name,
 				price=price,
-				quantity=quantity
+				quantity=quantity,
 			)
 	session.add(item)
 	session.commit()
-
+	ret = {"ack":True, "error":""}
+	print("add product ----------------------------")	
 	return ret
