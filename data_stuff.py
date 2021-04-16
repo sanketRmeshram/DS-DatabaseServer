@@ -63,6 +63,7 @@ class Seller(Base):
     phone = Column(String(length=50))
     is_approved = Column(Boolean)
     products = relationship("Product", backref='seller')
+    username = Column(String(length=50))
     # profile
     # ratings
 
