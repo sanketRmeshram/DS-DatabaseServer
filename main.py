@@ -8,6 +8,7 @@ import struct
 import json 
 import heapq
 import urllib.request
+from data_ops import msg_handler
 
 public_ip = None
 local_ip = None
@@ -307,7 +308,7 @@ def serve_request_thread(conn,req_id):
         "content" : request_from_web_server
     }
     logging.info("Recieved : %s from request id  %d", json.dumps(request_from_web_server), req_id)
-    if request_from_web_server["isRead"] :
+    if request_from_web_server["type"]=='read' :
         operation_lock.acquire()
         response = dummy_execute(request_from_web_server)
         operation_lock.release()
@@ -374,12 +375,7 @@ def serve_request_thread(conn,req_id):
 
 
 def dummy_execute(msg) :
-    return {
-        "type" : "respose",
-        "content" : "nothing",
-        "what you said" : msg
-    }
-
+    return msg_handler(msg)
 
 def executor_thread() :
     logging.info("inside executor thread")
