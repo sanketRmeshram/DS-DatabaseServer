@@ -4,7 +4,7 @@
 - sudo mysql_secure_installation
 - sudo mysql
 - CREATE USER 'user'@'localhost' IDENTIFIED BY 'password';
-- GRANT ALL PRIVILEGES ON . TO 'user'@'localhost' WITH GRANT OPTION;
+- GRANT ALL PRIVILEGES ON \*.\* TO 'user'@'localhost' WITH GRANT OPTION;
 - FLUSH PRIVILEGES;
 - exit
 - mysql -u user -p
