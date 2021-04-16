@@ -375,7 +375,15 @@ def serve_request_thread(conn,req_id):
 
 
 def dummy_execute(msg) :
-    return msg_handler(msg)
+
+    try :
+        responce = msg_handler(msg)
+        return responce
+    except Exception as e :
+        logging.info(e)
+        return {
+            'error' : e
+        }
 
 def executor_thread() :
     logging.info("inside executor thread")
