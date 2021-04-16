@@ -491,7 +491,7 @@ def executor_thread() :
                 completed_request_lock.release()
             logging.info("executed : %s ", json.dumps(task))
         else :
-            index_of_initiator = op[2].split('_')[0]
+            index_of_initiator = int(op[2].split('_')[0])
             while (op[2] not in completed_atomic_multicast) and isAlive[index_of_initiator] :
                 pass
 
