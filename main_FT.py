@@ -83,6 +83,7 @@ def init():
 
     # local_ip = open("my_ip.txt",'r').readline().replace(" ","")
 
+    # get local ip address
     local_ip = socket.gethostbyname(socket.gethostname())
     # public_ip = open("my_ip.txt", 'r').readline().replace(" ", "").replace('\n',"")
 
@@ -91,19 +92,25 @@ def init():
     public_ip = json.loads(urllib.request.urlopen("http://ip.jsontest.com/").read())['ip']
     print("public ip : " , public_ip)
 
+    # get the ip addresses of the other servers from the gist file
     server_socket = None
     local_port = 1104
     url = "https://gist.githubusercontent.com/sanketRmeshram/2e0c71add59402cc26f1a518e425e0a8/raw/all_ip.txt"
     list_of_ip_port = [(_.decode("utf-8").replace(" ", "").replace('\n', ""), local_port) for _ in urllib.request.urlopen(url)]
     print(list_of_ip_port)
     total_node = len(list_of_ip_port)
+    # elements are tuple
     accepted_connection = [None for _ in range(total_node)]
     joined_connection = [None for _ in range(total_node)]
+    
+    # mapping ip to an index
     ip_mapping_to_index = {}
-
     for i in range(total_node):
         ip_mapping_to_index[list_of_ip_port[i][0]] = i
     local_index = ip_mapping_to_index[public_ip]
+
+
+
     send_queue = [Queue() for _ in range(total_node)]
     send_queue_lock = [threading.Lock() for _ in range(total_node)]
     request_id = 0
@@ -111,22 +118,30 @@ def init():
     timestamp = 0
     timestamp_lock = threading.Lock()
     message_id_lock = threading.Lock()
+
+    # a heap of tasks sorted by the min timestamp
+    # tuple format (timestamp,is_confirmed,msg_id)
+    # msg_id = (str(my_index) + "_" + str(message_id))
     task_queue = []
     task_queue_lock = threading.Lock()
+    # message_id of completed atomic multicasts
     completed_atomic_multicast = set()
     completed_atomic_multicast_lock = threading.Lock()
     message_id_to_message = {}
     message_id_to_message_lock = threading.Lock()
-    atomic_multicast_ACKD_timestamps = {}
+    atomic_multicast_ACKD_timestamps = {}           # mapping of message_id  to list of received timestamps
     atomic_multicast_ACKD_timestamps_lock = threading.Lock()
 
+    # database operations lock
     operation_lock = threading.Lock()
 
+    # set of completed requests' id
     completed_request = set()
     completed_request_lock = threading.Lock()
-    req_id_to_response = {}
+    req_id_to_response = {}         # mapping of req id to corresponding response
     req_id_to_response_lock = threading.Lock()
 
+    # to track all the alive nodes
     isAlive = [True for _ in range(total_node)]
     total_alive_node = total_node
     isAlive_lock = [threading.Lock() for _ in range(total_node)]
@@ -168,7 +183,6 @@ def handle(msg,index) :
             "msg_id" : str(local_index)+"_"+str(msg_id),
             "content" : request
 
-
         }
     '''
 
@@ -194,6 +208,7 @@ def handle(msg,index) :
     global total_alive_node
     global total_alive_node_lock
 
+    # node on receiving prepare req adds the msg to its msg queue
     if msg["type"] == "PrepareAtomicMulticast" :
 
         timestamp_lock.acquire()
@@ -201,6 +216,7 @@ def handle(msg,index) :
         timestamp = max(timestamp+1,msg["time"]+1)
         now = timestamp
 
+        # task_queue format : (timestamp,is_confirmed,msg_id)
         task_queue_lock.acquire()
         heapq.heappush(task_queue, (now,0,msg["msg_id"]))
         task_queue_lock.release()
@@ -227,16 +243,17 @@ def handle(msg,index) :
         send_queue_lock[index].release()
 
         return 
-    
+    # 
     if msg["type"] == "ACKAtomicMulticast" :
 
 
         max_time = None
         atomic_multicast_ACKD_timestamps_lock.acquire()
-        if msg["msg_id"] in atomic_multicast_ACKD_timestamps :
+        if msg["msg_id"] in atomic_multicast_ACKD_timestamps:
             atomic_multicast_ACKD_timestamps[msg["msg_id"]].append(msg["time"])
         else :
             atomic_multicast_ACKD_timestamps[msg["msg_id"]] = [msg["time"]]
+        # check if ack received from all alive nodes
         total_alive_node_lock.acquire()
         if len(atomic_multicast_ACKD_timestamps[msg["msg_id"]])==total_alive_node :
             max_time = max(atomic_multicast_ACKD_timestamps[msg["msg_id"]])
@@ -244,7 +261,7 @@ def handle(msg,index) :
         atomic_multicast_ACKD_timestamps_lock.release()
         if max_time is None :
             return
-        
+        # send the max time out of all the received ACK'd msgs to all alive nodes 
         reply = {
             "time": max_time,
             "type": "FinalAtomicMulticast",
@@ -260,15 +277,15 @@ def handle(msg,index) :
             send_queue[i].put(reply)
             send_queue_lock[i].release()
         return
+    #   
     if msg["type"] == "FinalAtomicMulticast":
 
-
         task_queue_lock.acquire()
+        # tuple is(timestamp,is_confirmed,msg_id)
         heapq.heappush(task_queue, (msg["time"],1,msg["msg_id"]))
-        task_queue_lock.release()   
-        
+        task_queue_lock.release()           
 
-
+        # add the msg to list of completed msgs
         completed_atomic_multicast_lock.acquire()
         completed_atomic_multicast.add(msg["msg_id"])
         completed_atomic_multicast_lock.release()
@@ -339,7 +356,11 @@ def write_thread(conn,index,ip) :
         isAlive_lock[index].release()
 
 
-
+'''
+handles the web server requests
+handles locally if read request
+and does atomic multicasts if write request
+'''
 def serve_request_thread(conn,req_id):
     logging.info("inside serving request : %d ",req_id)
     global timestamp
@@ -366,6 +387,7 @@ def serve_request_thread(conn,req_id):
     logging.info("Recieved : %s from request id  %d", json.dumps(request_from_web_server), req_id)
     if request_from_web_server["type"]=='read' :
         operation_lock.acquire()
+        # calling database function and get json response 
         response = dummy_execute(request_from_web_server)
         operation_lock.release()
         response = json.dumps(response)
@@ -378,17 +400,11 @@ def serve_request_thread(conn,req_id):
 
         return 
 
-        
-
-        
-
-
 
     timestamp_lock.acquire()
     timestamp+=1
     now = timestamp
     timestamp_lock.release()
-
 
 
     message_id_lock.acquire()
@@ -401,8 +417,6 @@ def serve_request_thread(conn,req_id):
         "type" : "PrepareAtomicMulticast" ,
         "msg_id" : str(local_index)+"_"+str(msg_id),
         "content" : request
-
-
     }
     msg = json.dumps(msg)
 
@@ -431,7 +445,9 @@ def serve_request_thread(conn,req_id):
     conn.close()
     
 
-
+'''
+calls the db execute function
+'''
 def dummy_execute(msg) :
 
     try :
@@ -460,13 +476,12 @@ def executor_thread() :
 
         while not task_queue :
             pass
-
+        # tuple format (timestamp,is_confirmed,msg_id)
         task_queue_lock.acquire()
         op = heapq.heappop(task_queue)
         task_queue_lock.release()
-
+        # if confirmed
         if op[1]==1 :
-
 
 
             message_id_to_message_lock.acquire()
@@ -479,7 +494,7 @@ def executor_thread() :
             response = dummy_execute(task["content"])
             operation_lock.release()
 
-            #execute here
+            #execute here if the own node id is the initiator node
             if int(op[2].split('_')[0]) == local_index :
 
                 req_id_to_response_lock.acquire()
